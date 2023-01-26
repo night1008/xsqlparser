@@ -2442,11 +2442,21 @@ func (p *Parser) parseOptionalArgs() ([]sqlast.Node, error) {
 		p.prevToken()
 		return nil, nil
 	} else {
+		var args []sqlast.Node
+		for _, k := range []string{"DISTINCT", "ALL"} {
+			if ok, _, _ := p.parseKeyword(k); ok {
+				p.prevToken()
+				arg, _ := p.parseIdentifier()
+				args = append(args, arg)
+				break
+			}
+		}
 		as, err := p.parseExprList()
 		if err != nil {
 			return nil, errors.Errorf("parseExprList failed: %w", err)
 		}
-		return as, nil
+		args = append(args, as...)
+		return args, nil
 	}
 }
 

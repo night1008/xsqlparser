@@ -300,9 +300,9 @@ func TestParser_ParseStatement(t *testing.T) {
 			},
 			{
 				name: "having",
-				in: `SELECT COUNT(customer_id), country 
-FROM customers 
-GROUP BY country 
+				in: `SELECT COUNT(customer_id), country
+FROM customers
+GROUP BY country
 HAVING COUNT(customer_id) > 3`,
 				out: &sqlast.QueryStmt{
 					Body: &sqlast.SQLSelect{
@@ -394,8 +394,8 @@ HAVING COUNT(customer_id) > 3`,
 			{
 				name: "order by and limit",
 				in: `SELECT product, SUM(quantity) AS product_units
-FROM orders 
-WHERE region IN (SELECT region FROM top_regions) 
+FROM orders
+WHERE region IN (SELECT region FROM top_regions)
 ORDER BY product_units LIMIT 100`,
 				out: &sqlast.QueryStmt{
 					Body: &sqlast.SQLSelect{
@@ -680,9 +680,9 @@ GROUP BY region, product`,
 			},
 			{
 				name: "exists",
-				in: `SELECT * FROM user WHERE NOT EXISTS 
-(SELECT * 
-FROM user_sub 
+				in: `SELECT * FROM user WHERE NOT EXISTS
+(SELECT *
+FROM user_sub
 WHERE user.id = user_sub.id AND user_sub.job = 'job');`,
 				out: &sqlast.QueryStmt{
 					Body: &sqlast.SQLSelect{
@@ -799,11 +799,11 @@ WHERE user.id = user_sub.id AND user_sub.job = 'job');`,
 			},
 			{
 				name: "between / case",
-				in: `SELECT 
+				in: `SELECT
 CASE
- WHEN expr1 = '1' THEN 'test1' 
- WHEN expr2 = '2' THEN 'test2' 
- ELSE 'other' 
+ WHEN expr1 = '1' THEN 'test1'
+ WHEN expr2 = '2' THEN 'test2'
+ ELSE 'other'
 END AS alias
 FROM user WHERE id BETWEEN 1 AND 2`,
 				out: &sqlast.QueryStmt{
@@ -903,6 +903,56 @@ FROM user WHERE id BETWEEN 1 AND 2`,
 								Long: int64(1),
 								From: sqltoken.NewPos(7, 28),
 								To:   sqltoken.NewPos(7, 29),
+							},
+						},
+					},
+				},
+			},
+			{
+				name: "count distinct",
+				in:   "SELECT COUNT(DISTINCT email) FROM user",
+				out: &sqlast.QueryStmt{
+					Body: &sqlast.SQLSelect{
+						Select: sqltoken.NewPos(1, 1),
+						Projection: []sqlast.SQLSelectItem{
+							&sqlast.UnnamedSelectItem{
+								Node: &sqlast.Function{
+									Name: &sqlast.ObjectName{
+										Idents: []*sqlast.Ident{
+											{
+												Value: "COUNT",
+												From:  sqltoken.NewPos(1, 8),
+												To:    sqltoken.NewPos(1, 13),
+											},
+										},
+									},
+									Args: []sqlast.Node{
+										&sqlast.Ident{
+											Value: "DISTINCT",
+											From:  sqltoken.NewPos(1, 14),
+											To:    sqltoken.NewPos(1, 22),
+										},
+										&sqlast.Ident{
+											Value: "email",
+											From:  sqltoken.NewPos(1, 23),
+											To:    sqltoken.NewPos(1, 28),
+										},
+									},
+									ArgsRParen: sqltoken.NewPos(1, 29),
+								},
+							},
+						},
+						FromClause: []sqlast.TableReference{
+							&sqlast.Table{
+								Name: &sqlast.ObjectName{
+									Idents: []*sqlast.Ident{
+										{
+											Value: "user",
+											From:  sqltoken.NewPos(1, 35),
+											To:    sqltoken.NewPos(1, 39),
+										},
+									},
+								},
 							},
 						},
 					},
